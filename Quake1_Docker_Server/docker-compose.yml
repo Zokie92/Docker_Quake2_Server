@@ -27,6 +27,7 @@ services:
   # ----------------------
   quake_server:
     image: zobees/quakeworld:latest        # Färdig Quake-server image
+    platform: linux/amd64
     container_name: quake_server
     ports:
       - "26000:26000/udp"                  # Must have: UDP-port som exponeras mot nätverket
