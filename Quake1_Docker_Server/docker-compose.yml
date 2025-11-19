@@ -1,10 +1,63 @@
-version: "3"
+version: "3.9"
+
+# Definiera separata nätverk
+networks:
+  quake_net:
+    driver: bridge
+  wg_net:
+    driver: bridge
+  # dashboard_net:                           # Could have: extra nätverk för webdashboard
+  #   driver: bridge
+
 services:
-  quakeworld:
-    image: zobees/quakeworld:latest
-    container_name: quakeworld_server
+  quake_server:
+    image: zobees/quakeworld:latest        # Quake-server image
+    container_name: quake_server
     ports:
-      - "27500:27500/udp"  # Standard QuakeWorld port
+      - "26000:26000/udp"                  # Must have: UDP-port exposed
     volumes:
-      - ./id1:/id1         # Montera din id1-mapp
+      - ./id1:/id1                         # Persistent Quake data
+      - ./configs/server.cfg:/server.cfg   # Persistent server config (Should have)
+      - quake_data:/data                    # Persistent volume
+    networks:
+      - quake_net                           # Separate network
+      # - dashboard_net                      # Could have: extra network
+    restart: unless-stopped                 # Auto-start server
+
+    # Could have: Lägg till mod/maps eller status monitoring
+    # environment:
+    #   - MODS_PATH=/mods
+    #   - ENABLE_MONITORING=true
+
+  wireguard:
+    image: linuxserver/wireguard            # WireGuard (Should have)
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Stockholm
+      - SERVERURL=auto
+      - SERVERPORT=51820
+      - PEERS=1
+      - PEERDNS=1.1.1.1
+    volumes:
+      - ./wg-config:/config                # Persistent WireGuard config
+    ports:
+      - "51820:51820/udp"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      - wg_net
     restart: unless-stopped
+
+    # Could have: auto-start scripts, dashboard integration
+    # command: ["sh", "/config/start-dashboard.sh"]
+
+# Persistenta volymer
+volumes:
+  quake_data:
+  wg_config:
+  # dashboard_data:                         # Could have: persistent volume för dashboard
