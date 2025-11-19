@@ -32,7 +32,7 @@ services:
     ports:
       - "26000:26000/udp"                  # Must have: UDP-port som exponeras mot nätverket
     volumes:
-      - ./id1:/id1                         # Persistent lokal mapp för serverdata
+      - ./game/id1_files:/id1              # Persistent lokal mapp för serverdata
       - ./configs/server.cfg:/server.cfg   # Persistent serverkonfiguration
       - quake_data:/data                    # Docker managed persistent volym för serverdata
     networks:
