@@ -1,15 +1,18 @@
+version: "3.9"
+
 services:
   quake_server:
-    image: zobees/quakeworld:latest
+    image: moisesber/quaken:latest
     container_name: quake_server
-    platform: linux/amd64
     ports:
+      - "26000:26000"
       - "26000:26000/udp"
     volumes:
-      - ./quake_data/id1:/qw-mount/id1
-      - ./quake_data/server.cfg:/qw-mount/server.cfg
-      - ./quake_data/maps:/qw-mount/maps
-      - ./quake_data/mods:/qw-mount/mods
+      - ./quake_data:/nquakesv/id1     # Mounta din id1 mapp till det som imagen förväntar sig
+      - ./quake_data/maps:/nquakesv/modules
+    environment:
+      - GAME_DIR=id1                   # Exempel, beroende på image‑specifikation
+      - CONFIG_FILE=server.cfg
     restart: unless-stopped
 
   wireguard:
@@ -30,6 +33,8 @@ services:
       - ./wg-config:/config
     ports:
       - "51820:51820/udp"
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
     restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
