@@ -1,0 +1,8 @@
+version: '3'
+services:
+  quake2:
+    image: q2pro/q2pro:latest
+    ports:
+      - "27910:27910/udp"
+    volumes:
+      - ./baseq2:/q2pro/baseq2
