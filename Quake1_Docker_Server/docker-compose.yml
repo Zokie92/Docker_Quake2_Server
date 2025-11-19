@@ -1,36 +1,54 @@
 version: "3.9"
 
-# Definiera separata nätverk
+# ======================
+# NÄTVERK              #
+# ======================
 networks:
   quake_net:
-    driver: bridge
+    driver: bridge                 # Separat nätverk för Quake-servern
   wg_net:
-    driver: bridge
-  # dashboard_net:                           # Could have: extra nätverk för webdashboard
-  #   driver: bridge
+    driver: bridge                 # Separat nätverk för WireGuard VPN
+  # dashboard_net:                 # Could have: extra nätverk för webbaserat dashboard
 
+# ======================
+# PERSISTENTA VOLYMER  #
+# ======================
+volumes:
+  quake_data:                      # Persistent volym för Quake-serverdata (sparar stats, configs etc)
+  wg_config:                        # Persistent volym för WireGuard-konfiguration
+  # dashboard_data:                # Could have: persistent volym för dashboard-data
+
+# ======================
+# TJÄNSTER             #
+# ======================
 services:
+  # ----------------------
+  # Quake-server         #
+  # ----------------------
   quake_server:
-    image: zobees/quakeworld:latest        # Quake-server image
+    image: zobees/quakeworld:latest        # Färdig Quake-server image
     container_name: quake_server
     ports:
-      - "26000:26000/udp"                  # Must have: UDP-port exposed
+      - "26000:26000/udp"                  # Must have: UDP-port som exponeras mot nätverket
     volumes:
-      - ./id1:/id1                         # Persistent Quake data
-      - ./configs/server.cfg:/server.cfg   # Persistent server config (Should have)
-      - quake_data:/data                    # Persistent volume
+      - ./id1:/id1                         # Persistent lokal mapp för serverdata
+      - ./configs/server.cfg:/server.cfg   # Persistent serverkonfiguration
+      - quake_data:/data                    # Docker managed persistent volym för serverdata
     networks:
-      - quake_net                           # Separate network
-      # - dashboard_net                      # Could have: extra network
-    restart: unless-stopped                 # Auto-start server
+      - quake_net                           # Kopplad till separat Quake-nätverk
+    restart: unless-stopped                 # Startar automatiskt om containern kraschar
 
-    # Could have: Lägg till mod/maps eller status monitoring
+    # Could have (extra funktioner som kan aktiveras senare)
     # environment:
-    #   - MODS_PATH=/mods
-    #   - ENABLE_MONITORING=true
+    #   - MODS_PATH=/mods                    # Could have: katalog för mods/maps
+    #   - ENABLE_MONITORING=true             # Could have: aktivera serverstatus-övervakning
+    # command: ["sh", "/config/start-server.sh"]  # Could have: custom start-skript
 
+  # ----------------------
+  # WireGuard VPN        #
+  # ----------------------
   wireguard:
-    image: linuxserver/wireguard            # WireGuard (Should have)
+    image: linuxserver/wireguard            # WireGuard image
     container_name: wireguard
     cap_add:
       - NET_ADMIN
@@ -41,23 +59,20 @@ services:
       - TZ=Europe/Stockholm
       - SERVERURL=auto
       - SERVERPORT=51820
-      - PEERS=1
+      - PEERS=1                             # Skapar en VPN-klient
       - PEERDNS=1.1.1.1
     volumes:
-      - ./wg-config:/config                # Persistent WireGuard config
+      - ./wg-config:/config                  # Persistent konfigurationsmapp för WireGuard
     ports:
-      - "51820:51820/udp"
+      - "51820:51820/udp"                    # Exponerar WireGuard-port
     sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.conf.all.src_valid_mark=1   # Nödvändigt för WireGuard routing
     networks:
-      - wg_net
-    restart: unless-stopped
+      - wg_net                                # Kopplad till WireGuard-nätverk
+      - quake_net                             # Kopplad till Quake-nätverk för VPN-access
+    restart: unless-stopped                   # Startar om vid crash
 
-    # Could have: auto-start scripts, dashboard integration
-    # command: ["sh", "/config/start-dashboard.sh"]
-
-# Persistenta volymer
-volumes:
-  quake_data:
-  wg_config:
-  # dashboard_data:                         # Could have: persistent volume för dashboard
+    # Could have (extra funktioner som kan aktiveras senare)
+    # command: ["sh", "/config/start-dashboard.sh"]  # Could have: starta webbaserat dashboard
+    # environment:
+    #   - ENABLE_DASHBOARD=true             # Could have: aktivera dashboard för monitoring
