@@ -9,10 +9,13 @@ services:
     volumes:
       - ./quake_data:/nquakesv/id1     # Mounta din id1 mapp till det som imagen förväntar sig
       - ./quake_data/maps:/nquakesv/modules
+      - ./server.cfg:/nquakesv/id1/server.cfg
     environment:
       - GAME_DIR=id1                   # Exempel, beroende på image‑specifikation
       - CONFIG_FILE=server.cfg
     restart: unless-stopped
+    networks:
+      - wg_network
 
   wireguard:
     image: linuxserver/wireguard
