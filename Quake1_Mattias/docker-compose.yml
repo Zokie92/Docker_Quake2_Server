@@ -32,6 +32,9 @@ services:
       - ./wg-config:/config
     ports:
       - "51820:51820/udp"
+    networks:
+      - wg_network
+    
     restart: unless-stopped
 
 networks:
