@@ -13,6 +13,7 @@ services:
     environment:
       - GAME_DIR=id1                   # Exempel, beroende på image‑specifikation
       - CONFIG_FILE=server.cfg
+      - BIND_IP=10.13.13.1
     restart: unless-stopped
     networks:
       - wg_network
@@ -37,7 +38,6 @@ services:
       - "51820:51820/udp"
     networks:
       - wg_network
-    
     restart: unless-stopped
 
 networks:
