@@ -29,7 +29,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Stockholm
-      - SERVERURL=auto
+      - SERVERURL=81.235.254.231        # Din offentliga IP eller DDNS-domän
       - SERVERPORT=51820
       - PEERS=10
       - PEERDNS=1.1.1.1
